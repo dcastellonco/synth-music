@@ -521,7 +521,70 @@
        SECCIÓ 4: VIDEOCLIP — VISUAL_TRANSMISSION
     ===================================================== */
 
-    /* Accent magenta per a tota la secció */
+    /* Selector de videoclip */
+    .vc-selector {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .vc-select-btn {
+      flex: 1;
+      background: var(--dim);
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-family: var(--font);
+      font-size: 12px;
+      padding: 0.6rem 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+      text-align: left;
+    }
+
+    .vc-select-btn:hover {
+      border-color: var(--text-dim);
+      color: var(--green);
+    }
+
+    .vc-select-btn.active {
+      border-color: var(--magenta);
+      color: var(--cyan);
+      background: rgba(86,224,255,0.04);
+    }
+
+    .vc-btn-id {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: inherit;
+      opacity: 0.7;
+      flex-shrink: 0;
+    }
+
+    .vc-select-btn.active .vc-btn-id { opacity: 1; color: var(--magenta); }
+
+    .vc-btn-title {
+      font-size: 12px;
+      letter-spacing: 0.05em;
+    }
+
+    /* Glitch d'entrada al canviar de clip */
+    @keyframes vcGlitch {
+      0%   { opacity:1; transform: translateX(0)   skewX(0deg);   filter: none; }
+      10%  { opacity:0.6; transform: translateX(-4px)  skewX(-3deg);  filter: hue-rotate(90deg) brightness(1.5); }
+      20%  { opacity:0.9; transform: translateX(3px)   skewX(2deg);   filter: hue-rotate(-60deg); }
+      30%  { opacity:0.4; transform: translateX(-2px)  skewX(0deg);   filter: brightness(2) saturate(0); }
+      40%  { opacity:1;   transform: translateX(0)     skewX(0deg);   filter: none; }
+      50%  { opacity:0.7; transform: translateX(2px)   skewX(1deg);   filter: hue-rotate(180deg); }
+      60%  { opacity:1;   transform: translateX(0)     skewX(0deg);   filter: none; }
+      100% { opacity:1;   transform: translateX(0)     skewX(0deg);   filter: none; }
+    }
+
+    .vc-glitch { animation: vcGlitch 0.4s steps(1) forwards; }
+
+    /* Accent cian per a la secció videoclip */
     #videoclip .section-title { color: var(--magenta); }
     #videoclip .section-title::before { color: var(--green); }
 
@@ -626,7 +689,6 @@
       width: 100%;
       height: 100%;
       object-fit: cover;
-      display: none;
     }
 
     /* Overlay magenta transparent */
@@ -955,6 +1017,7 @@
   <div class="container" style="display:flex;justify-content:space-between;font-size:11px;color:var(--text-dim);">
     <span aria-hidden="true">STATUS: <span class="tag-green">ONLINE</span></span>
     <span aria-hidden="true">PISTES CARREGADES: <span class="tag-cyan">8/8</span></span>
+    <span>ESCOLTADES: <span id="listenedCount" class="tag-green" role="status" aria-live="polite" aria-atomic="true">0/8</span></span>
     <span>REPRODUCTOR: <span id="nowPlaying" class="tag-magenta" role="status" aria-live="polite" aria-atomic="true">INACTIU</span></span>
   </div>
 </div>
@@ -997,12 +1060,12 @@
         <span class="stat-label">GÈNERES FICTICIS</span>
       </div>
       <div class="stat">
-        <span class="stat-value">1</span>
-        <span class="stat-label">VIDEOCLIP</span>
+        <span class="stat-value">2</span>
+        <span class="stat-label">VIDEOCLIPS</span>
       </div>
       <div class="stat">
-        <span class="stat-value">0</span>
-        <span class="stat-label">HUMANS INVOLUCRATS</span>
+        <span class="stat-value">1</span>
+        <span class="stat-label">DIRECTOR CREATIU</span>
       </div>
     </div>
   </div>
@@ -1058,12 +1121,24 @@
       <div class="vc-header-left">
         <p class="section-label" aria-hidden="true">ffmpeg -i unknown_signal.mp4 -vf "overlay=magenta" -codec copy output.mp4</p>
         <h2 class="section-title">VISUAL_TRANSMISSION</h2>
-        <p class="vc-track-name">[Títol de la pista seleccionada per al videoclip]</p>
+        <p class="vc-track-name" id="vcTrackName">Lux in Tenebris</p>
       </div>
       <div class="live-indicator" aria-label="Emissió en directe">
         <span class="live-dot" aria-hidden="true"></span>
         <span aria-hidden="true">LIVE_FEED_01</span>
       </div>
+    </div>
+
+    <!-- Selector de videoclip -->
+    <div class="vc-selector" role="group" aria-label="Selecció de videoclip">
+      <button class="vc-select-btn active" id="vcBtn1" data-clip="1" aria-pressed="true">
+        <span class="vc-btn-id" aria-hidden="true">FILE_01</span>
+        <span class="vc-btn-title">Lux in Tenebris</span>
+      </button>
+      <button class="vc-select-btn" id="vcBtn2" data-clip="2" aria-pressed="false">
+        <span class="vc-btn-id" aria-hidden="true">FILE_02</span>
+        <span class="vc-btn-title">Neón Sobre Piel</span>
+      </button>
     </div>
 
     <!-- Reproductor: coordenades | vídeo | coordenades -->
@@ -1094,7 +1169,7 @@
       </div>
 
       <!-- Vídeo central amb crosshair i overlays -->
-      <div class="video-container">
+      <div class="video-container" id="vcContainer">
         <!-- Cantonades de crosshair -->
         <span class="vc-corner tl" aria-hidden="true"></span>
         <span class="vc-corner tr" aria-hidden="true"></span>
@@ -1146,7 +1221,7 @@
         aria-label="Reproductor de la banda sonora del videoclip: Lux in Tenebris"
         style="flex:1;height:28px;accent-color:#7CFFB2;"
       >
-        <source src="songs/Lux_in_tenebris.mp3" type="audio/mpeg">
+        <source id="vcAudioSrc" src="songs/Lux_in_tenebris.mp3" type="audio/mpeg">
       </audio>
     </div>
 
@@ -1161,10 +1236,10 @@
 
       <!-- Metadades del fitxer -->
       <dl class="vc-file-meta" aria-label="Metadades del fitxer de vídeo">
-        <div><dt class="fm-key">FILE:</dt><dd>Lux_in_Tenebris.mp4</dd></div>
-        <div><dt class="fm-key">VIDEO:</dt><dd>bucle · 7 s · mut</dd></div>
-        <div><dt class="fm-key">AUDIO:</dt><dd>Lux_in_tenebris.mp3</dd></div>
-        <div><dt class="fm-key">DURATION:</dt><dd>0:59</dd></div>
+        <div><dt class="fm-key">FILE:</dt><dd id="vcMetaFile">Lux_in_Tenebris.mp4</dd></div>
+        <div><dt class="fm-key">VIDEO:</dt><dd id="vcMetaVideo">bucle · 7 s · mut</dd></div>
+        <div><dt class="fm-key">AUDIO:</dt><dd id="vcMetaAudio">Lux_in_tenebris.mp3</dd></div>
+        <div><dt class="fm-key">DURATION:</dt><dd id="vcMetaDuration">0:59</dd></div>
         <div><dt class="fm-key">SOURCE:</dt><dd>unknown_transmission</dd></div>
         <div><dt class="fm-key">TOOL:</dt><dd>Suno</dd></div>
       </dl>
@@ -1257,7 +1332,7 @@
     </div>
 
     <div style="margin-top:0.75rem;border-top:1px solid var(--border);padding-top:1rem;font-size:11px;color:var(--text-dim);">
-      <span class="tag-green">$</span> synth-music --version 1.0.0 --status active<span class="blink">_</span>
+      <span class="tag-green">$</span> synth-music --version 1.2.0 --status active<span class="blink">_</span>
     </div>
   </div>
 </footer>
@@ -1284,7 +1359,7 @@
       duration: "2:50",
       tool: "Suno",
       bpm: "82 BPM",
-      year: "2026"
+      year: "2089"
     },
     {
       id: 2,
@@ -1296,7 +1371,7 @@
       duration: "3:04",
       tool: "Suno",
       bpm: "112 BPM",
-      year: "2026"
+      year: "2103"
     },
     {
       id: 3,
@@ -1308,7 +1383,7 @@
       duration: "0:59",
       tool: "Suno",
       bpm: "90 BPM",
-      year: "2026"
+      year: "2112"
     },
     {
       id: 4,
@@ -1320,7 +1395,7 @@
       duration: "3:01",
       tool: "Suno",
       bpm: "120 BPM",
-      year: "2026"
+      year: "2095"
     },
     {
       id: 5,
@@ -1332,7 +1407,7 @@
       duration: "2:55",
       tool: "Suno",
       bpm: "124 BPM",
-      year: "2026"
+      year: "2131"
     },
     {
       id: 6,
@@ -1344,7 +1419,7 @@
       duration: "2:08",
       tool: "Suno",
       bpm: "95 BPM",
-      year: "2026"
+      year: "2147"
     },
     {
       id: 7,
@@ -1356,7 +1431,7 @@
       duration: "1:59",
       tool: "Suno",
       bpm: "140 BPM",
-      year: "2026"
+      year: "2118"
     },
     {
       id: 8,
@@ -1368,7 +1443,7 @@
       duration: "2:03",
       tool: "Suno",
       bpm: "170–95 BPM",
-      year: "2026"
+      year: "2099"
     }
   ];
 
@@ -1542,6 +1617,12 @@
      CONTROL D'ÀUDIO — Un sol reproductor actiu
   --------------------------------------------------- */
   let activeAudio = null;
+  const listenedIds = new Set(); // ids de pistes que s'han reproduït almenys una vegada
+
+  function updateListenedCount() {
+    const el = document.getElementById('listenedCount');
+    if (el) el.textContent = listenedIds.size + '/' + tracks.length;
+  }
 
   function initAudioPlayers() {
     const audioEls = document.querySelectorAll('audio[data-track-id]');
@@ -1549,19 +1630,20 @@
 
     audioEls.forEach(audio => {
       audio.addEventListener('play', () => {
-        // Pausa qualsevol altre que estigui sonant
         if (activeAudio && activeAudio !== audio) {
           activeAudio.pause();
-          // Elimina classe "playing" de la targeta anterior
           const prevId = activeAudio.dataset.trackId;
           document.getElementById(`card-${prevId}`)?.classList.remove('playing');
         }
         activeAudio = audio;
         const id = audio.dataset.trackId;
         const track = tracks.find(t => t.id === parseInt(id));
-        // Afegeix classe "playing" a la targeta activa
         document.getElementById(`card-${id}`)?.classList.add('playing');
         nowPlayingEl.textContent = track ? track.title : 'ACTIU';
+
+        // Registra la pista com a escoltada
+        listenedIds.add(id);
+        updateListenedCount();
       });
 
       audio.addEventListener('pause', () => {
@@ -1599,6 +1681,112 @@
   }
 
   /* ---------------------------------------------------
+     DADES DELS VIDEOCLIPS
+  --------------------------------------------------- */
+  const clips = {
+    1: {
+      video:    'videoclip/clip.mp4',
+      audio:    'songs/Lux_in_tenebris.mp3',
+      title:    'Lux in Tenebris',
+      file:     'Lux_in_Tenebris.mp4',
+      videoMeta:'bucle · 7 s · mut',
+      audioMeta:'Lux_in_tenebris.mp3',
+      duration: '0:59',
+      ariaAudio:'Reproductor de la banda sonora del videoclip: Lux in Tenebris',
+      ariaVideo:'Videoclip de Lux in Tenebris, reproduït en bucle sense so',
+      syslog: [
+        'Initializing signal decoder...',
+        'Searching carrier frequency...',
+        'Buffering signal...'
+      ]
+    },
+    2: {
+      video:    'videoclip/clip2.mp4',
+      audio:    'songs/Neón_sobre_Piel.mp3',
+      title:    'Neón Sobre Piel',
+      file:     'clip2.mp4',
+      videoMeta:'bucle · 11 s · mut',
+      audioMeta:'Neón_sobre_Piel.mp3',
+      duration: '2:55',
+      ariaAudio:'Reproductor de la banda sonora del videoclip: Neón Sobre Piel',
+      ariaVideo:'Videoclip de Neón Sobre Piel, reproduït en bucle sense so',
+      syslog: [
+        'Loading new transmission...',
+        'Switching carrier channel...',
+        'Signal acquired. Playing FILE_02...'
+      ]
+    }
+  };
+
+  /* ---------------------------------------------------
+     SELECTOR DE VIDEOCLIP — Canvi amb efecte glitch
+  --------------------------------------------------- */
+  function initVcSelector() {
+    const btn1 = document.getElementById('vcBtn1');
+    const btn2 = document.getElementById('vcBtn2');
+    if (!btn1 || !btn2) return;
+
+    [btn1, btn2].forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = parseInt(btn.dataset.clip);
+        const clip = clips[id];
+        if (!clip) return;
+
+        // Actualitza botons
+        btn1.classList.toggle('active', id === 1);
+        btn2.classList.toggle('active', id === 2);
+        btn1.setAttribute('aria-pressed', id === 1 ? 'true' : 'false');
+        btn2.setAttribute('aria-pressed', id === 2 ? 'true' : 'false');
+
+        // Efecte glitch al contenidor del vídeo
+        const container = document.getElementById('vcContainer');
+        container.classList.remove('vc-glitch');
+        void container.offsetWidth; // reflow per reiniciar l'animació
+        container.classList.add('vc-glitch');
+        setTimeout(() => container.classList.remove('vc-glitch'), 450);
+
+        // Pausa àudio actual
+        const vcAudio = document.getElementById('vcAudio');
+        if (vcAudio && !vcAudio.paused) vcAudio.pause();
+
+        // Canvia vídeo
+        const vcVideo = document.getElementById('vcVideo');
+        vcVideo.src = clip.video;
+        vcVideo.setAttribute('aria-label', clip.ariaVideo);
+        vcVideo.load();
+        vcVideo.play().catch(() => {});
+
+        // Canvia àudio
+        const vcAudioSrc = document.getElementById('vcAudioSrc');
+        vcAudioSrc.src = clip.audio;
+        vcAudio.load();
+        vcAudio.setAttribute('aria-label', clip.ariaAudio);
+
+        // Actualitza títol
+        document.getElementById('vcTrackName').textContent = clip.title;
+
+        // Actualitza metadades
+        document.getElementById('vcMetaFile').textContent     = clip.file;
+        document.getElementById('vcMetaVideo').textContent    = clip.videoMeta;
+        document.getElementById('vcMetaAudio').textContent    = clip.audioMeta;
+        document.getElementById('vcMetaDuration').textContent = clip.duration;
+
+        // Actualitza sys-log
+        const sysLog = document.getElementById('sysLog');
+        sysLog.innerHTML = clip.syslog.map((msg, i) =>
+          `<span class="sys-line${i === clip.syslog.length - 1 ? ' active' : ''}">${msg}</span>`
+        ).join('');
+
+        // Actualitza nowPlaying si estava sonant
+        const nowPlayingEl = document.getElementById('nowPlaying');
+        if (nowPlayingEl && nowPlayingEl.textContent.includes('[VIDEOCLIP]')) {
+          nowPlayingEl.textContent = clip.title + ' [VIDEOCLIP]';
+        }
+      });
+    });
+  }
+
+  /* ---------------------------------------------------
      VIDEOCLIP AUDIO SYNC
      Sincronitza #vcAudio amb el vídeo en bucle mut.
      Quan l'usuari reprodueix #vcAudio, el vídeo es
@@ -1612,6 +1800,14 @@
     const vcVideo = document.getElementById('vcVideo');
     const nowPlayingEl = document.getElementById('nowPlaying');
     if (!vcAudio || !vcVideo) return;
+
+    // Força l'inici del bucle en carregar (autoplay pot ser bloquejat pel navegador)
+    vcVideo.play().catch(() => {
+      // Si el navegador bloqueja autoplay, intentem de nou en el primer interact
+      const startVideo = () => { vcVideo.play().catch(() => {}); };
+      document.addEventListener('click', startVideo, { once: true });
+      document.addEventListener('keydown', startVideo, { once: true });
+    });
 
     vcAudio.addEventListener('play', () => {
       // Pausa qualsevol pista de la grid activa
@@ -1748,6 +1944,7 @@
     initGpsAnimation();
     initSystemLog();
     initVcAudioSync();
+    initVcSelector();
   });
 </script>
 </body>
